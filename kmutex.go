@@ -2,15 +2,18 @@ package kmutex
 
 import "sync"
 
+// Can be locked by unique ID
 type Kmutex struct {
 	m *sync.Map
 }
 
+// Create new Kmutex
 func NewKmutex() Kmutex {
 	m := sync.Map{}
 	return Kmutex{&m}
 }
 
+// Unlock Kmutex by unique ID
 func (s Kmutex) Unlock(key interface{})  {
 	l, exist := s.m.Load(key)
 	if !exist {
@@ -21,6 +24,7 @@ func (s Kmutex) Unlock(key interface{})  {
 	l_.Unlock()
 }
 
+// Lock Kmutex by unique ID
 func (s Kmutex) Lock(key interface{}) {
 	m := sync.Mutex{}
 	m_, _ := s.m.LoadOrStore(key, &m)
