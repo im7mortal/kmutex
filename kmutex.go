@@ -12,7 +12,7 @@ type Locker struct {
 	s   *sync.Map
 }
 
-func NewStorage() storage {
+func NewKmutex() storage {
 	return storage{sync.Map{}}
 }
 
