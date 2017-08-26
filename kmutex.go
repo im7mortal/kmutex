@@ -12,7 +12,10 @@ func NewKmutex() Kmutex {
 }
 
 func (s Kmutex) Unlock(key interface{})  {
-	l, _ := s.m.Load(key)
+	l, exist := s.m.Load(key)
+	if !exist {
+		panic("kmutex: unlock of unlocked mutex")
+	}
 	l_ := l.(*sync.Mutex)
 	s.m.Delete(key)
 	l_.Unlock()
