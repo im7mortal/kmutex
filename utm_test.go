@@ -20,9 +20,9 @@ func TestKmutex(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		go func(i int) {
-			w := km.Acquire(id)
+			km.Lock(id)
 			println(i)
-			w.Unlock()
+			km.Unlock(id)
 			wg.Done()
 		}(i)
 	}

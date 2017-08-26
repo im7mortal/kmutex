@@ -2,33 +2,30 @@ package kmutex
 
 import "sync"
 
-type storage struct {
+type Kmutex struct {
 	m sync.Map
 }
 
-type Locker struct {
-	key interface{}
-	l   *sync.Mutex
-	s   *sync.Map
+func NewKmutex() Kmutex {
+	return Kmutex{sync.Map{}}
 }
 
-func NewKmutex() storage {
-	return storage{sync.Map{}}
+func (s Kmutex) Unlock(key interface{})  {
+	l, _ := s.m.Load(key)
+	l_ := l.(*sync.Mutex)
+	s.m.Delete(key)
+	l_.Unlock()
 }
 
-func (l Locker) Unlock() {
-	l.s.Delete(l.key)
-	l.l.Unlock()
-}
-
-func (s storage) Acquire(key interface{}) Locker {
+func (s Kmutex) Lock(key interface{}) {
 	m := sync.Mutex{}
 	m_, _ := s.m.LoadOrStore(key, &m)
 	mm := m_.(*sync.Mutex)
 	mm.Lock()
 	if mm != &m {
 		mm.Unlock()
-		return s.Acquire(key)
+		s.Lock(key)
+		return
 	}
-	return Locker{l: &m, s: &s.m, key: key}
+	return
 }
