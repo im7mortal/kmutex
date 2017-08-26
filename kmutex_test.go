@@ -2,40 +2,36 @@ package kmutex_test
 
 import (
 	"sync"
-	"time"
 	"testing"
 
 	"github.com/im7mortal/kmutex"
 )
 
+const number  = 100
 
 func TestKmutex(t *testing.T) {
 	wg := sync.WaitGroup{}
 
 	km := kmutex.NewKmutex()
 
-	ids := []string{
-		"red",
-		"blue",
-		"yellow",
+	ids := []int{}
+
+	for i := 0; i < number; i++ {
+		ids = append(ids, i)
 	}
 
-
 	ii := 0
-	for i := 0; i < 90; i++ {
+	for i := 0; i < number * number; i++ {
 		wg.Add(1)
 		go func(iii int) {
 			km.Lock(ids[iii])
-			time.Sleep(time.Second)
-			println(ii, ids[iii])
 			km.Unlock(ids[iii])
 			wg.Done()
 		}(ii)
 		ii++
-		if ii == 3 {
+		if ii == number {
 			ii = 0
 		}
 	}
 	wg.Wait()
-
 }
