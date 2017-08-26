@@ -1,3 +1,4 @@
+// Package kmutex is synchronization primitive. Mutex which can be locked by unique ID.
 package kmutex
 
 import "sync"
