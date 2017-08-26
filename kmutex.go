@@ -3,11 +3,12 @@ package kmutex
 import "sync"
 
 type Kmutex struct {
-	m sync.Map
+	m *sync.Map
 }
 
 func NewKmutex() Kmutex {
-	return Kmutex{sync.Map{}}
+	m := sync.Map{}
+	return Kmutex{&m}
 }
 
 func (s Kmutex) Unlock(key interface{})  {
