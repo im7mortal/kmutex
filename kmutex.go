@@ -3,29 +3,36 @@ package kmutex
 import "sync"
 
 type Kmutex struct {
-	m sync.Map
+	mut *sync.Mutex
+	m   map[interface{}]*sync.Mutex
 }
 
 func NewKmutex() Kmutex {
-	return Kmutex{sync.Map{}}
+	m := sync.Mutex{}
+	return Kmutex{&m, map[interface{}]*sync.Mutex{}}
 }
 
-func (s Kmutex) Unlock(key interface{})  {
-	l, _ := s.m.Load(key)
-	l_ := l.(*sync.Mutex)
-	s.m.Delete(key)
-	l_.Unlock()
+func (s Kmutex) Unlock(key interface{}) {
+	s.mut.Lock()
+	defer s.mut.Unlock()
+	m := s.m[key]
+	delete(s.m, key)
+	m.Unlock()
 }
 
 func (s Kmutex) Lock(key interface{}) {
 	m := sync.Mutex{}
-	m_, _ := s.m.LoadOrStore(key, &m)
-	mm := m_.(*sync.Mutex)
-	mm.Lock()
-	if mm != &m {
-		mm.Unlock()
+	s.mut.Lock()
+	m_, busy := s.m[key]
+	if busy {
+		s.mut.Unlock()
+		m_.Lock()
+		m_.Unlock()
 		s.Lock(key)
 		return
 	}
+	m.Lock()
+	s.m[key] = &m
+	s.mut.Unlock()
 	return
 }
