@@ -1,41 +1,45 @@
 // Package kmutex is synchronization primitive. Mutex which can be locked by unique ID.
+// Key + Mutex = Kmutex
 package kmutex
 
 import "sync"
 
 // Can be locked by unique ID
 type Kmutex struct {
-	m *sync.Map
+	c *sync.Cond
+	l sync.Locker
+	s map[interface{}]struct{}
 }
 
 // Create new Kmutex
-func NewKmutex() Kmutex {
-	m := sync.Map{}
-	return Kmutex{&m}
+func NewKmutex() *Kmutex {
+	l := sync.Mutex{}
+	return &Kmutex{c: sync.NewCond(&l), l: &l, s: make(map[interface{}]struct{})}
 }
 
+// Create new Kmutex with user provided lock
+func NewKmutexWithLock(l sync.Locker) *Kmutex {
+	return &Kmutex{c: sync.NewCond(l), l: l, s: make(map[interface{}]struct{})}
+}
+
+func (km *Kmutex) locked(key interface{}) (ok bool) { _, ok = km.s[key]; return }
+
 // Unlock Kmutex by unique ID
-func (km Kmutex) Unlock(key interface{})  {
-	m, exist := km.m.Load(key)
-	if !exist {
-		panic("kmutex: unlock of unlocked mutex")
-	}
-	mm := m.(*sync.Mutex)
-	km.m.Delete(key)
-	mm.Unlock()
+func (km *Kmutex) Unlock(key interface{})  {
+	km.l.Lock()
+	defer km.l.Unlock()
+	delete(km.s, key)
+	km.c.Broadcast()
 }
 
 // Lock Kmutex by unique ID
-func (km Kmutex) Lock(key interface{}) {
-	m := sync.Mutex{}
-	m_, _ := km.m.LoadOrStore(key, &m)
-	mm := m_.(*sync.Mutex)
-	mm.Lock()
-	if mm != &m {
-		mm.Unlock()
-		km.Lock(key)
-		return
+func (km *Kmutex) Lock(key interface{}) {
+	km.l.Lock()
+	defer km.l.Unlock()
+	for km.locked(key) {
+		km.c.Wait()
 	}
+	km.s[key] = struct{}{}
 	return
 }
 

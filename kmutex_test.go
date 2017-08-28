@@ -35,13 +35,3 @@ func TestKmutex(t *testing.T) {
 	}
 	wg.Wait()
 }
-
-func TestUnlockNotLocked(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Panic must occur if unlock of unlocked mutex")
-		}
-	} ()
-	km := kmutex.NewKmutex()
-	km.Unlock("cause panic")
-}
