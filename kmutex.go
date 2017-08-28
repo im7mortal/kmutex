@@ -15,25 +15,25 @@ func NewKmutex() Kmutex {
 }
 
 // Unlock Kmutex by unique ID
-func (s Kmutex) Unlock(key interface{})  {
-	l, exist := s.m.Load(key)
+func (km Kmutex) Unlock(key interface{})  {
+	m, exist := km.m.Load(key)
 	if !exist {
 		panic("kmutex: unlock of unlocked mutex")
 	}
-	l_ := l.(*sync.Mutex)
-	s.m.Delete(key)
-	l_.Unlock()
+	mm := m.(*sync.Mutex)
+	km.m.Delete(key)
+	mm.Unlock()
 }
 
 // Lock Kmutex by unique ID
-func (s Kmutex) Lock(key interface{}) {
+func (km Kmutex) Lock(key interface{}) {
 	m := sync.Mutex{}
-	m_, _ := s.m.LoadOrStore(key, &m)
+	m_, _ := km.m.LoadOrStore(key, &m)
 	mm := m_.(*sync.Mutex)
 	mm.Lock()
 	if mm != &m {
 		mm.Unlock()
-		s.Lock(key)
+		km.Lock(key)
 		return
 	}
 	return
