@@ -62,3 +62,16 @@ func TestWithLock(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+
+func TestLockerInterface(t *testing.T) {
+	km := kmutex.New()
+
+	locker := km.Locker("TEST")
+
+	cond := sync.NewCond(locker)
+
+	if false {
+		cond.Wait()
+	}
+}

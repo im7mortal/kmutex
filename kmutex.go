@@ -44,25 +44,25 @@ func (km *Kmutex) Lock(key interface{}) {
 }
 
 // satisfy sync.Locker interface
-type Locker struct {
+type locker struct {
 	km *Kmutex
 	key interface{}
 }
 
 // Lock locks m. If the lock is already in use, the calling goroutine blocks until the mutex is available.
-func (l Locker) Lock() {
+func (l locker) Lock() {
 	l.km.Lock(l.key)
 }
 
 // Unlock unlocks m. It is a run-time error if m is not locked on entry to Unlock.
-func (l Locker) Unlock()  {
+func (l locker) Unlock()  {
 	l.km.Unlock(l.key)
 }
 
 // Return a object which implement sync.Locker interface
 // A Locker represents an object that can be locked and unlocked.
 func (km Kmutex) Locker(key interface{}) sync.Locker {
-	return Locker{
+	return locker{
 		key: key,
 		km: &km,
 	}
