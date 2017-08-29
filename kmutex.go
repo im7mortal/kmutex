@@ -12,13 +12,13 @@ type Kmutex struct {
 }
 
 // Create new Kmutex
-func NewKmutex() *Kmutex {
+func New() *Kmutex {
 	l := sync.Mutex{}
 	return &Kmutex{c: sync.NewCond(&l), l: &l, s: make(map[interface{}]struct{})}
 }
 
 // Create new Kmutex with user provided lock
-func NewKmutexWithLock(l sync.Locker) *Kmutex {
+func WithLock(l sync.Locker) *Kmutex {
 	return &Kmutex{c: sync.NewCond(l), l: l, s: make(map[interface{}]struct{})}
 }
 
