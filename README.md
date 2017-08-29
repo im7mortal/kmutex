@@ -2,4 +2,4 @@
 # kmutex
 Sync primitive for golang. Allow block part of resource by unique ID.
 
-[GO PLAYGROUND EXAMPLE](https://play.golang.org/p/dmLtKFbFz8)
+[GO PLAYGROUND EXAMPLE](https://play.golang.org/p/B-LBepY9rn)
