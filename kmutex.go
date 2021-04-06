@@ -1,5 +1,10 @@
-// Package kmutex is synchronization primitive. Mutex which can be locked by unique ID.
-// Key + Mutex = Kmutex
+/*
+Package kmutex is a synchronization primitive that allows locking individual
+resources by unique ID.
+
+Key + Mutex = Kmutex
+
+*/
 package kmutex
 
 import "sync"
@@ -14,22 +19,28 @@ type Kmutex struct {
 // Create new Kmutex
 func New() *Kmutex {
 	l := sync.Mutex{}
-	return &Kmutex{c: sync.NewCond(&l), l: &l, s: make(map[interface{}]struct{})}
+	return &Kmutex{
+		c: sync.NewCond(&l),
+		l: &l,
+		s: make(map[interface{}]struct{}),
+	}
 }
 
 // Create new Kmutex with user provided lock
 func WithLock(l sync.Locker) *Kmutex {
-	return &Kmutex{c: sync.NewCond(l), l: l, s: make(map[interface{}]struct{})}
+	return &Kmutex{
+		c: sync.NewCond(l),
+		l: l,
+		s: make(map[interface{}]struct{}),
+	}
 }
 
-func (km *Kmutex) locked(key interface{}) (ok bool) { _, ok = km.s[key]; return }
-
 // Unlock Kmutex by unique ID
-func (km *Kmutex) Unlock(key interface{})  {
+func (km *Kmutex) Unlock(key interface{}) {
 	km.l.Lock()
 	defer km.l.Unlock()
 	delete(km.s, key)
-	km.c.Broadcast()
+	km.c.Signal()
 }
 
 // Lock Kmutex by unique ID
@@ -43,19 +54,24 @@ func (km *Kmutex) Lock(key interface{}) {
 	return
 }
 
+func (km *Kmutex) locked(key interface{}) bool {
+	_, ok := km.s[key]
+	return ok
+}
+
 // satisfy sync.Locker interface
 type locker struct {
-	km *Kmutex
+	km  *Kmutex
 	key interface{}
 }
 
-// Lock locks m. If the lock is already in use, the calling goroutine blocks until the mutex is available.
+// Lock this locker. If already locked, Lock blocks until it is available.
 func (l locker) Lock() {
 	l.km.Lock(l.key)
 }
 
-// Unlock unlocks m. It is a run-time error if m is not locked on entry to Unlock.
-func (l locker) Unlock()  {
+// Unlock this locker. It is a run-time error if already locked.
+func (l locker) Unlock() {
 	l.km.Unlock(l.key)
 }
 
@@ -64,6 +80,6 @@ func (l locker) Unlock()  {
 func (km Kmutex) Locker(key interface{}) sync.Locker {
 	return locker{
 		key: key,
-		km: &km,
+		km:  &km,
 	}
 }
