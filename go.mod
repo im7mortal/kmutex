@@ -1,3 +1,3 @@
-module github.com/im7mortal/kmutex
+module github.com/gammazero/kmutex
 
 go 1.15
