@@ -59,6 +59,14 @@ func TestWithLock(t *testing.T) {
 		}(i % len(ids))
 	}
 	wg.Wait()
+
+	// Verify correct hit count for each resource
+	// expecting: (10n hits / n resources) * 10 == 100 hits/resource
+	for i := range resources {
+		if resources[i] != 100 {
+			t.Errorf("resource-%d expected 100 hits, got %d", i, resources[i])
+		}
+	}
 }
 
 func TestLockerInterface(t *testing.T) {
