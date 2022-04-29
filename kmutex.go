@@ -62,8 +62,8 @@ func (km *Kmutex) Unlock(key interface{}) {
 	kl.cond.Signal()
 }
 
-// Lock Kmutex by unique ID
-func (km *Kmutex) Lock(key interface{}) {
+// Lock Kmutex by unique ID. Returns if waited for an Unlock.
+func (km *Kmutex) Lock(key interface{}) (waited bool) {
 	km.l.Lock()
 	defer km.l.Unlock()
 	for {
@@ -74,7 +74,7 @@ func (km *Kmutex) Lock(key interface{}) {
 				locked: true,
 				ref:    1,
 			}
-			return
+			return false
 		}
 
 		kl.ref++
@@ -82,7 +82,7 @@ func (km *Kmutex) Lock(key interface{}) {
 		// No need to check if locked, since signal only given on unlock and
 		// only delivered to one goroutine.
 		kl.locked = true
-		return
+		return true
 	}
 }
 
