@@ -179,6 +179,28 @@ func TestCondDeadlock(t *testing.T) {
 	}
 }
 
+func TestWaited(t *testing.T) {
+	km := New()
+
+	km.Lock(2) // in case a different key affects
+
+	if km.Lock(1) {
+		t.Fatal("expected not to wait")
+	}
+	time.AfterFunc(100*time.Millisecond, func() {
+		km.Unlock(1)
+	})
+
+	if !km.Lock(1) {
+		t.Fatal("expected to wait")
+	}
+	km.Unlock(1)
+
+	if km.Lock(1) {
+		t.Fatal("expected not to wait")
+	}
+}
+
 func BenchmarkKmutex1000(b *testing.B) {
 	km := New()
 	ids := makeIds(number)
